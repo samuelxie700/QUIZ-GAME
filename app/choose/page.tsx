@@ -2,10 +2,25 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// 12 张卡片：card-01.png ~ card-12.png
+// 12 张卡片：public/cards/card-01.png ~ card-12.png
+const labels = [
+  'Art & Humanities',
+  'Business',
+  'Design & Creative Arts',
+  'Engineering',
+  'Environmental Studies',
+  'Health Science',
+  'IT & Computer Science',
+  'Law',
+  'Eduation',
+  'Nursing',
+  'Other',
+  'Social Work',
+];
+
 const CARDS = Array.from({ length: 12 }).map((_, i) => ({
   id: `card-${String(i + 1).padStart(2, '0')}`,
-  label: `Card ${String(i + 1).padStart(2, '0')}`,
+  label: labels[i] ?? `Card ${String(i + 1).padStart(2, '0')}`,
   src: `/cards/card-${String(i + 1).padStart(2, '0')}.png`,
 }));
 
@@ -14,7 +29,7 @@ export default function ChoosePage() {
   const [current, setCurrent] = useState(0);
   const chosen = CARDS[current];
 
-  // 初次居中第0张
+  // 初次居中第 0 张
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el || !el.children.length) return;
@@ -38,35 +53,44 @@ export default function ChoosePage() {
     setCurrent(best);
   };
 
-  // 先不跳转，只在控制台打印所选项（你准备好后再接跳转）
+  // 先不跳转，只打印
   const onConfirm = () => {
     console.log('chosen:', chosen);
-    // 需要跳转时再启用：
-    // router.push(`/play?track=${encodeURIComponent(chosen.id)}`);
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#253448] to-[#1b2330]">
-      <div className="w-[390px] h-[844px] rounded-[28px] shadow-2xl overflow-hidden relative text-white flex flex-col">
-        {/* 标题 */}
-        <div className="px-5 pt-6 pb-4">
-          <p className="text-center text-[18px] leading-6 font-semibold">
-            Choose your path to your Aussie<br/>knowledge mastery!
+    <main className="min-h-screen flex items-center justify-center bg-neutral-200">
+      {/* iPhone 竖屏容器 */}
+      <div className="w-[390px] h-[844px] rounded-[28px] shadow-2xl overflow-hidden relative text-white">
+        {/* 背景渐变 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#273444] via-[#1f2a3a] to-[#17202b]" />
+
+        {/* 顶部标题 */}
+        <div className="relative px-6 pt-8 pb-2">
+          <p className="text-center text-[18px] leading-6 font-semibold text-white/90">
+            Choose your path to your Aussie<br />knowledge mastery!
           </p>
         </div>
 
-        {/* 滑动区域 */}
-        <div className="px-3">
+        {/* 滑动区域（整体下移：pt-[120px] 可调） */}
+        <div className="relative px-3">
           <div
             ref={scrollerRef}
             onScroll={onScroll}
+            onWheelCapture={(e) => {
+              e.preventDefault();
+              const el = e.currentTarget;
+              const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+              el.scrollBy({ left: delta * 1.1, behavior: 'auto' });
+            }}
             className="
-              overflow-x-auto no-scrollbar
+              overflow-x-auto overflow-y-hidden
               snap-x snap-mandatory
               scroll-px-6
-              flex gap-4 px-4 py-2
+              flex gap-5 px-5 pt-[120px] pb-2
+              touch-pan-x
+              no-scrollbar
             "
-            style={{ scrollBehavior: 'smooth' }}
           >
             {CARDS.map((card, idx) => {
               const active = idx === current;
@@ -75,23 +99,23 @@ export default function ChoosePage() {
                   key={card.id}
                   className={`
                     snap-center shrink-0
-                    w-[280px] h-[500px]
-                    rounded-3xl bg-[#3a4c66]
-                    p-3
+                    w-[220px] h-[340px]
+                    rounded-2xl
+                    bg-[#F5F0EA]
+                    border-[6px] border-[#E69A4E]
+                    flex flex-col items-center justify-center
                     transition-all duration-300
-                    ${active ? 'scale-[1.02] ring-4 ring-white/30' : 'opacity-90'}
+                    ${active ? 'scale-105 shadow-[0_12px_28px_rgba(0,0,0,0.35)]' : 'opacity-85'}
                   `}
                 >
-                  <div className="w-full h-full rounded-2xl bg-[#EBD9C6] overflow-hidden flex items-center justify-center">
-                    <img
-                      src={card.src}
-                      alt={card.label}
-                      className="w-full h-full object-contain"
-                      draggable={false}
-                    />
-                  </div>
-                  <div className="text-center mt-3 font-extrabold tracking-wide">
-                    {card.label}
+                  <img
+                    src={card.src}
+                    alt={card.label}
+                    className="max-w-[80%] max-h-[80%] object-contain"
+                    draggable={false}
+                  />
+                  <div className="mt-4 text-[#2E3E55] font-extrabold text-base tracking-wide">
+                    {card.label.toUpperCase()}
                   </div>
                 </div>
               );
@@ -99,19 +123,25 @@ export default function ChoosePage() {
           </div>
         </div>
 
-        {/* 底部：当前选中提示 + Confirm（不跳转） */}
-        <div className="mt-auto px-6 pb-6 pt-3">
-          <div className="text-center text-sm text-white/80 mb-2">
-            Selected: <span className="font-semibold">{chosen.label}</span>
-          </div>
+        {/* 底部按钮区 */}
+        <div className="absolute inset-x-0 bottom-0 px-6 pb-8 pt-3">
           <button
             onClick={onConfirm}
-            className="w-full py-3.5 rounded-xl text-lg font-semibold bg-white/15 hover:bg-white/25 transition"
+            className="
+              w-full h-[48px]
+              rounded-xl
+              font-semibold
+              bg-[#1C2A3C]
+              shadow-[inset_0_-4px_0_rgba(0,0,0,0.35)]
+              hover:brightness-110
+              transition
+            "
           >
             Confirm
           </button>
+
           <p className="text-center text-xs text-white/70 mt-3">
-            Swipe to Select Card then Confirm
+            I changed my mind!
           </p>
         </div>
       </div>

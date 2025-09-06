@@ -122,7 +122,7 @@ export default function PageR6() {
         <button
           type="button"
           onClick={() => setOpen('personality')}
-          className="absolute left-[197px] top-[511px] w-[140px] h-[53px] bg-[#F2A25C] rounded-[14px]"
+          className="absolute left-[197px] top-[511px] w-[140px] h-[53px] bg-[#4D688C] rounded-[14px]"
         >
           <div className={`${bagel400.className} absolute text-white text-[16px] leading-[32px]`} style={{ left: 26, top: 5 }}>
             Personality
@@ -151,7 +151,7 @@ export default function PageR6() {
             <span className="text-[16px] leading-[32px]" style={{ color: '#152840' }}>Lucky&nbsp;</span>
             <span className="text-[16px] leading-[32px]" style={{ color: '#4D688C' }}>Charm</span>
           </div>
-          <div className={`${dongle700.className} absolute text-[18px] leading-[20px] font-bold text-center`} style={{ left: 91, top: 37, width: 198, height: 40, color: '#152840' }}>
+          <div className={`${dongle700.className} absolute text-[18px] leading-[20px] font-bold text-center`} style={{ left: 91, top: 37, width: 198, height: 40, color: '#4D688C' }}>
             Ready to find upcoming opportunities.
           </div>
         </button>

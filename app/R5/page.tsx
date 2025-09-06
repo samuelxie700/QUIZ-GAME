@@ -176,7 +176,7 @@ export default function PageR5() {
           className="absolute left-[38px] top-[675px] w-[139px] h-[117px] bg-white rounded-[14px]"
         >
           <div
-            className={`${bagel400.className} absolute left-[29px] top-[5px] text-[16px] leading-[32px]`}
+            className={`${bagel400.className} absolute left-[40px] top-[5px] text-[16px] leading-[32px]`}
             style={{ color: '#4D688C' }}
           >
             Partner

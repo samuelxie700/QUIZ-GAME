@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** 方框可调参数 **/
+/** Adjustable frame parameters **/
 const BORDER_COLOR = '#F2A25C';
-const BORDER_THICKNESS = 8;   // 边框粗细(px)
-const BORDER_RADIUS = 12;     // 圆角(px)
+const BORDER_THICKNESS = 8;   // Border thickness (px)
+const BORDER_RADIUS = 12;     // Border radius (px)
 
-/** 只缩宽 or 只缩高：分别改下面四个 inset 值（单位：px） */
-const TOP_INSET = 1;          // 往下收（只缩高度就调它和 BOTTOM_INSET）
-const RIGHT_INSET = 14;       // 往左收（只缩宽度就调它和 LEFT_INSET）
-const BOTTOM_INSET = 1;       // 往上收
-const LEFT_INSET = 14;        // 往右收
+/** Narrow only width or only height: tweak the four inset values below (px) */
+const TOP_INSET = 1;          // Move down (for height-only, adjust this and BOTTOM_INSET)
+const RIGHT_INSET = 14;       // Move left (for width-only, adjust this and LEFT_INSET)
+const BOTTOM_INSET = 1;       // Move up
+const LEFT_INSET = 14;        // Move right
 
 const labels = [
   'Art & Humanities',
@@ -23,7 +23,7 @@ const labels = [
   'Health Science',
   'IT & Computer Science',
   'Law',
-  'Eduation',
+  'Education',
   'Nursing',
   'Other',
   'Social Work',
@@ -38,19 +38,38 @@ const CARDS = Array.from({ length: 12 }).map((_, i) => ({
 export default function ChoosePage() {
   const router = useRouter();
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const [current, setCurrent] = useState(0);            // 居中索引
-  const [selected, setSelected] = useState<number | null>(null); // 点击选中索引
+  const [current, setCurrent] = useState(0);                  // Centered index
+  const [selected, setSelected] = useState<number | null>(0); // Initially select index 0
 
-  // 初次居中第 0 张
-  useEffect(() => {
+  // Center the given index
+  const centerToIndex = useCallback((idx: number, behavior: ScrollBehavior = 'smooth') => {
     const el = scrollerRef.current;
-    if (!el || !el.children.length) return;
-    const first = el.children[0] as HTMLElement;
-    const left = first.offsetLeft + first.offsetWidth / 2 - el.clientWidth / 2;
-    el.scrollTo({ left: Math.max(0, left), behavior: 'auto' });
+    if (!el) return;
+    const child = el.children[idx] as HTMLElement | undefined;
+    if (!child) return;
+    const left = child.offsetLeft + child.offsetWidth / 2 - el.clientWidth / 2;
+    el.scrollTo({ left: Math.max(0, left), behavior });
   }, []);
 
-  // 滚动时找离中心最近的卡片
+  // Initially center index 0
+  useEffect(() => {
+    centerToIndex(0, 'auto');
+    // Keyboard navigation support
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // While scrolling, find the card closest to the horizontal center
   const onScroll = () => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -67,40 +86,97 @@ export default function ChoosePage() {
 
   const onCardClick = (idx: number) => {
     setSelected(prev => (prev === idx ? null : idx));
+    centerToIndex(idx);
   };
 
   const onConfirm = () => {
     if (selected == null) return;
-    // 这里按你的原逻辑进入下一页
-    router.push('/play/q1');
+    // Navigate to next page per your original flow
+    router.push('/play/play/q1');
   };
 
   const hint = selected == null
-    ? 'Swipe to Select Card then Confirm'
-    : 'i canged my mind';
+    ? 'Swipe to select a card, then confirm'
+    : 'I changed my mind';
 
   const canProceed = selected != null;
 
+  const handlePrev = () => {
+    const target = Math.max(0, current - 1);
+    setSelected(target);
+    centerToIndex(target);
+  };
+
+  const handleNext = () => {
+    const max = CARDS.length - 1;
+    const target = Math.min(max, current + 1);
+    setSelected(target);
+    centerToIndex(target);
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-neutral-200">
-      {/* iPhone 竖屏容器 */}
+      {/* iPhone portrait container */}
       <div className="w-[390px] h-[844px] rounded-[28px] shadow-2xl overflow-hidden relative text-white">
-        {/* 背景渐变 */}
+        {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#273444] via-[#1f2a3a] to-[#17202b]" />
 
-        {/* 顶部标题 */}
+        {/* Header */}
         <div className="relative px-6 pt-8 pb-2">
           <p className="text-center text-[18px] leading-6 font-semibold text-white/90">
             Choose your path to your Aussie<br />knowledge mastery!
           </p>
         </div>
 
-        {/* 滑动区域 */}
+        {/* Scroll area */}
         <div className="relative px-3">
+          {/* Left/Right arrow overlay */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-1">
+            <button
+              type="button"
+              aria-label="Previous"
+              onClick={handlePrev}
+              disabled={current === 0}
+              className={`
+                pointer-events-auto select-none
+                w-11 h-11 rounded-full grid place-items-center
+                bg-white/15 backdrop-blur-sm
+                border border-white/20 shadow
+                transition active:scale-95
+                ${current === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/20'}
+              `}
+            >
+              {/* Left arrow icon (inline SVG) */}
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              aria-label="Next"
+              onClick={handleNext}
+              disabled={current === CARDS.length - 1}
+              className={`
+                pointer-events-auto select-none
+                w-11 h-11 rounded-full grid place-items-center
+                bg-white/15 backdrop-blur-sm
+                border border-white/20 shadow
+                transition active:scale-95
+                ${current === CARDS.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/20'}
+              `}
+            >
+              {/* Right arrow icon (inline SVG) */}
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
           <div
             ref={scrollerRef}
             onScroll={onScroll}
-            // ✅ 不再 preventDefault，改用 onWheel，并手动横向滚动
+            // No preventDefault; use onWheel to drive horizontal scrolling
             onWheel={(e) => {
               const el = e.currentTarget as HTMLDivElement;
               const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
@@ -112,13 +188,13 @@ export default function ChoosePage() {
               scroll-px-6
               flex gap-5 px-5 pt-[120px] pb-[140px]
               touch-pan-x
-              overscroll-x-contain overscroll-y-none   /* ✅ 防止滚动穿透，不需要 preventDefault */
+              overscroll-x-contain overscroll-y-none
               no-scrollbar
             "
           >
             {CARDS.map((card, idx) => {
-              const active = idx === current;          // 居中放大
-              const isSelected = idx === selected;     // 是否选中
+              const active = idx === current;          // Scale up if centered
+              const isSelected = idx === selected;     // Selected border
               return (
                 <button
                   type="button"
@@ -132,10 +208,10 @@ export default function ChoosePage() {
                     flex items-center justify-center
                     transition-all duration-300
                     ${active ? 'scale-105' : 'scale-95 opacity-85'}
-                    focus:outline-none
+                    focus:outline-none focus:ring-2 focus:ring-white/40
                   `}
                 >
-                  {/* 图片 + 可控方框容器 */}
+                  {/* Image + configurable frame container */}
                   <div className="relative w-full h-full">
                     <img
                       src={card.src}
@@ -163,7 +239,7 @@ export default function ChoosePage() {
           </div>
         </div>
 
-        {/* 底部按钮区 */}
+        {/* Bottom action area */}
         <div className="absolute inset-x-0 bottom-0 px-6 pb-8 pt-3">
           <button
             onClick={onConfirm}
@@ -185,7 +261,7 @@ export default function ChoosePage() {
               ${canProceed ? 'text-white/80 cursor-pointer underline-offset-2 hover:underline' : 'text-white/70'}
             `}
             onClick={() => {
-              if (canProceed) setSelected(null); // 选中时点击可取消
+              if (canProceed) setSelected(null); // Clear selection when clickable
             }}
           >
             {hint}

@@ -1,9 +1,14 @@
 **Project Set Up**
 
-
+```
 cd QUIZ-GAME_main
-npm install
+```
 
+```
+npm install
+```
+
+```
 .env.local file:
 
 (1) macOS:
@@ -15,6 +20,9 @@ printf "ADMIN_USER=admin\nADMIN_PASS=123\n" > .env.local
 type NUL > .env.local
 echo ADMIN_USER=admin> .env.local
 echo ADMIN_PASS=123>> .env.local
+`````
 
-
+** Run project**
+```
 npm run dev 
+```

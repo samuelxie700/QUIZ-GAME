@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { computePersona, type Persona } from '@/lib/scoring';
 import { getAnswers } from '@/lib/answers';
 
-// Map persona → result route folder
+// persona → result route folder
 const PERSONA_TO_RESULT: Record<Persona, string> = {
   'City Visionary': 'r1',
   'Adventurous Scholar': 'r6',
@@ -17,54 +17,111 @@ const PERSONA_TO_RESULT: Record<Persona, string> = {
   'Mindful Learner': 'r7',
 };
 
+type PostBody = {
+  answers: Record<string, string>;
+  persona: Persona;
+  meta?: {
+    sessionId?: string;
+    ua?: string;
+    tz?: string;
+    clientTimeISO?: string;
+  };
+};
+
+type PostResp = { ok: boolean; id?: string };
+
+function getOrCreateSessionId(): string {
+  const key = 'sessionId';
+  try {
+    const v = localStorage.getItem(key);
+    if (v) return v;
+    const sid = `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+    localStorage.setItem(key, sid);
+    return sid;
+  } catch {
+    return `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  }
+}
+
 export default function Page() {
   const router = useRouter();
   const msg = 'I wonder where you will go?';
   const [mounted, setMounted] = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const timer = setTimeout(() => setShowButton(true), 6000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setShowButton(true), 6000);
+    return () => clearTimeout(t);
   }, []);
 
-  // When the reveal button appears, wire it to compute → route
   useEffect(() => {
     if (!showButton) return;
     const btn = document.querySelector<HTMLButtonElement>('.reveal-btn');
     if (!btn) return;
 
-    const handler = (e: Event) => {
+    const onClick = async (e: Event) => {
       e.preventDefault();
+      if (submitting) return;
+      setSubmitting(true);
 
-      // 1) read answers safely
+      // 1) read answers & compute
       const answers = getAnswers();
-
-      // 2) compute persona
       const persona = computePersona(answers);
 
-      // 3) persist persona (optional for result pages)
+      // 2) save persona locally (optional)
+      try { localStorage.setItem('persona', persona); } catch {}
+
+      // 3) POST to /api/answers (server writes to Firestore)
+      const body: PostBody = {
+        answers,
+        persona,
+        meta: {
+          sessionId: getOrCreateSessionId(),
+          ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          clientTimeISO: new Date().toISOString(),
+        },
+      };
+
       try {
-        localStorage.setItem('persona', persona);
-      } catch {
-        /* ignore write errors */
+        const ctl = new AbortController();
+        const timeout = setTimeout(() => ctl.abort(), 5000);
+
+        const r = await fetch('/api/answers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: ctl.signal,
+          cache: 'no-store',
+        });
+
+        clearTimeout(timeout);
+
+        if (r.ok) {
+          const json = (await r.json()) as PostResp;
+          if (json.ok && json.id) {
+            try { localStorage.setItem('submissionId', json.id); } catch {}
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn('POST /api/answers non-2xx:', r.status);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('POST /api/answers failed:', err);
       }
 
-      // 4) route to the correct result page
+      // 4) navigate to result
       const slug = PERSONA_TO_RESULT[persona] ?? 'r8';
-
-      // Optional prefetch if available on this Next version
       (router as unknown as { prefetch?: (href: string) => void }).prefetch?.(`/result/${slug}`);
-
       router.push(`/result/${slug}`);
     };
 
-    btn.addEventListener('click', handler, { once: true });
-    return () => {
-      btn.removeEventListener('click', handler);
-    };
-  }, [showButton, router]);
+    btn.addEventListener('click', onClick, { once: true });
+    return () => btn.removeEventListener('click', onClick);
+  }, [showButton, router, submitting]);
 
   return (
     <main
@@ -104,7 +161,11 @@ export default function Page() {
           </p>
         )}
 
-        {showButton && <button className="reveal-btn">Click to Find out!</button>}
+        {showButton && (
+          <button className="reveal-btn" disabled={submitting}>
+            {submitting ? 'Working…' : 'Click to Find out!'}
+          </button>
+        )}
       </div>
 
       <style jsx>{`
@@ -124,19 +185,11 @@ export default function Page() {
           animation: wiggle 1400ms ease-in-out infinite;
         }
         @keyframes fadeInUp {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes wiggle {
-          0%,
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-2px) rotate(-1deg);
-          }
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-2px) rotate(-1deg); }
         }
         .reveal-btn {
           position: absolute;
@@ -154,36 +207,25 @@ export default function Page() {
           opacity: 0;
           animation: buttonReveal 800ms ease forwards, buttonShake 600ms ease 800ms;
         }
-        .reveal-btn:hover {
+        .reveal-btn[disabled] {
+          opacity: 0.8 !important;
+          cursor: not-allowed;
+          filter: saturate(0.6);
+        }
+        .reveal-btn:hover:not([disabled]) {
           background-color: #5a799e;
           transform: translateX(-50%) scale(1.05);
         }
         @keyframes buttonReveal {
-          from {
-            opacity: 0;
-            transform: translateX(-50%) translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
+          from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         @keyframes buttonShake {
-          0% {
-            transform: translateX(-50%) rotate(0deg);
-          }
-          25% {
-            transform: translateX(-50%) rotate(3deg);
-          }
-          50% {
-            transform: translateX(-50%) rotate(-3deg);
-          }
-          75% {
-            transform: translateX(-50%) rotate(2deg);
-          }
-          100% {
-            transform: translateX(-50%) rotate(0deg);
-          }
+          0%   { transform: translateX(-50%) rotate(0deg); }
+          25%  { transform: translateX(-50%) rotate(3deg); }
+          50%  { transform: translateX(-50%) rotate(-3deg); }
+          75%  { transform: translateX(-50%) rotate(2deg); }
+          100% { transform: translateX(-50%) rotate(0deg); }
         }
       `}</style>
     </main>

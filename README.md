@@ -23,6 +23,7 @@ type NUL > .env.local
 Ask Team Member Leia (Zhongyue) for this Documentation
 ```
 
+
 ****Project Running****
 
 **Run Quiz Game**
@@ -34,11 +35,13 @@ http://localhost:3000/
 ```
 
 **Run Backend Database**
+
 ``
 npm run db:ensure
 ``
 
 **Run Frontend Data Dashboard**
+
 ```
 http://localhost:3000/admin/login
 ```

@@ -2,21 +2,26 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Next 15+ uses this key
-  serverExternalPackages: ['@google-cloud/datastore'],
+  reactStrictMode: true,
+
+  // You’re now using Postgres via `pg` in the Node.js runtime.
+  // Marking it external avoids bundling optional/native bits.
+  // (Safe to remove if you prefer; it’s optional.)
+  serverExternalPackages: ['pg'],
 
   // Tell Turbopack the real root is this directory
   turbopack: {
     root: __dirname,
   },
 
-  // (Optional) Keep it external for webpack too, if used for server build
+  // If webpack is used for the server build (fallback paths),
+  // keep `pg` external there too.
   webpack: (config, { isServer }) => {
     if (isServer) {
       const externals = Array.isArray(config.externals)
         ? config.externals
         : (config.externals ? [config.externals] : []);
-      externals.push('@google-cloud/datastore');
+      externals.push('pg');
       config.externals = externals;
     }
     return config;

@@ -109,7 +109,6 @@ export default function Page() {
           console.warn('POST /api/answers non-2xx:', r.status);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error('POST /api/answers failed:', err);
       }
 

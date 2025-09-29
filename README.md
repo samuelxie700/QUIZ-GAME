@@ -8,6 +8,7 @@ npm install
 ```
 
 **Create .env.local file**
+
 (1) macOS:
 ```
 touch .env.local

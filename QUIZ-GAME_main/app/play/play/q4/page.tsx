@@ -8,7 +8,7 @@ type ChoiceKey = 'creative' | 'fast' | 'relaxed' | 'mix';
 const QID = 'q4';
 
 const Q4_VALUE_MAP: Record<ChoiceKey, string> = {
-  creative: 'Big and Creative City Life',
+  creative: 'Big and Creative',
   fast: 'Fast-Paced and Exciting',
   relaxed: 'Quiet and Relaxed',
   mix: 'A Mix of City and Nature',
@@ -23,7 +23,7 @@ export default function Q4Page() {
     const stored = a[QID] as string | undefined;
     if (!stored) return;
     const backMap: Partial<Record<string, ChoiceKey>> = {
-      'Big and Creative City Life': 'creative',
+      'Big and Creative': 'creative',
       'Fast-Paced and Exciting': 'fast',
       'Quiet and Relaxed': 'relaxed',
       'A Mix of City and Nature': 'mix',

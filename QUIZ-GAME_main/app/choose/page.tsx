@@ -248,8 +248,8 @@ export default function ChoosePage() {
               w-full h-[48px] rounded-xl font-semibold transition
               shadow-[inset_0_-4px_0_rgba(0,0,0,0.35)]
               ${canProceed
-                ? 'bg-green-600 hover:brightness-110'
-                : 'bg-[#1C2A3C] opacity-60 cursor-not-allowed'}
+                ? 'bg-[#BF4F26] hover:brightness-110'
+                : 'bg-[#F2D9BB] opacity-60 cursor-not-allowed'}
             `}
           >
             Confirm

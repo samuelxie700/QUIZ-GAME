@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { saveAnswer, getAnswers } from "@/lib/answers";
 
 const answers = [
-  "100 Rank or Bust!",
-  "200 Rank works for me!",
+  "Top 100 or Bust!",
+  "Top 200 works for me!",
   "It’s all about the program",
   "Who cares about ranking?",
 ] as const;
@@ -17,8 +17,8 @@ const QID = "q6";
 
 // 存储到 localStorage.answers 的值（可改成中文或更语义化）
 const Q6_VALUE_MAP: Record<ChoiceIndex, string> = {
-  0: "100 Rank or bust",
-  1: "200 Rank works for me",
+  0: "Top 100 or bust",
+  1: "Top 200 works for me",
   2: "It’s all about the program",
   3: "Who cares about rankings",
 };
@@ -35,8 +35,8 @@ export default function UniversityQuestion() {
 
     // 反向映射为索引
     const backMap: Partial<Record<string, ChoiceIndex>> = {
-      "100 Rank or bust": 0,
-      "200 Rank works for me": 1,
+      "Top 100 or bust": 0,
+      "Top 200 works for me": 1,
       "It’s all about the program": 2,
       "Who cares about rankings": 3,
     };

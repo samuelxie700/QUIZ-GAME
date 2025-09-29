@@ -59,8 +59,8 @@ const WEIGHTS: Record<string, readonly Persona[] | undefined> = {
   'Wildlife Watcher': ['Nature-Loving Learner', 'Mindful Learner'],
 
   // q6 — Ranking View
-  'Top 100 or bust!': ['City Visionary', 'Adventurous Scholar'],
-  'Top 200 works for me': ['Dynamic Explorer', 'Balanced Adventurer', 'Nature-Loving Learner'],
+  '100 Rank or bust!': ['City Visionary', 'Adventurous Scholar'],
+  '200 Rank works for me': ['Dynamic Explorer', 'Balanced Adventurer', 'Nature-Loving Learner'],
   'It’s all about the program': ['Creative Innovator', 'Focused Scholar', 'Balanced Adventurer'],
   'Who cares about rankings?': ['Mindful Learner'],
 

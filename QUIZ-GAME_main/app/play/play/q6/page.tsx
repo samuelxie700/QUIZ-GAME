@@ -15,7 +15,7 @@ const answers = [
 type ChoiceIndex = 0 | 1 | 2 | 3;
 const QID = "q6";
 
-// 存储到 localStorage.answers 的值（可改成中文或更语义化）
+// 存储到 localStorage.answers 的值
 const Q6_VALUE_MAP: Record<ChoiceIndex, string> = {
   0: "Top 100 or bust",
   1: "Top 200 works for me",
